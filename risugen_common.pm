@@ -116,7 +116,7 @@ sub eval_with_fields($$$$$) {
     my $calling_package = caller;
     my $evalstr = "{ package $calling_package; ";
     for my $tuple (@{ $rec->{fields} }) {
-        my ($var, $pos, $mask) = @$tuple;
+        my ($var, $pos, $mask, $wordpos) = @$tuple;
         my $val = ($insn >> $pos) & $mask;
         $evalstr .= "my (\$$var) = $val; ";
     }

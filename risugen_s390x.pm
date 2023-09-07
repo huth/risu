@@ -84,15 +84,21 @@ sub gen_one_insn($$)
     INSN: while(1) {
         my ($forcecond, $rec) = @_;
         my $insn = int(rand(0xffffffff));
+        my $insn48 = int(rand(0xffff0000));
         my $insnname = $rec->{name};
         my $insnwidth = $rec->{width};
-        my $fixedbits = $rec->{fixedbits};
-        my $fixedbitmask = $rec->{fixedbitmask};
+        my @fixedbits = (@{ $rec->{fixedbits} });
+        my @fixedbitmask = (@{  $rec->{fixedbitmask} });
         my $constraint = $rec->{blocks}{"constraints"};
         my $memblock = $rec->{blocks}{"memory"};
 
-        $insn &= ~$fixedbitmask;
-        $insn |= $fixedbits;
+        $insn &= ~$fixedbitmask[0];
+        $insn |= $fixedbits[0];
+
+        if ($insnwidth == 48) {
+            $insn48 &= ~$fixedbitmask[1];
+            $insn48 |= $fixedbits[1];
+        }
 
         if (defined $constraint) {
             # user-specified constraint: evaluate in an environment
@@ -121,6 +127,9 @@ sub gen_one_insn($$)
             insn16(($insn >> 16) & 0xffff);
         } else {
             insn32($insn);
+            if ($insnwidth == 48) {
+                insn16(($insn48 >> 16) & 0xffff);
+            }
         }
 
         return;

@@ -111,8 +111,8 @@ sub gen_one_insn($$)
         my $insn = int(rand(0xffffffff));
         my $insnname = $rec->{name};
         my $insnwidth = $rec->{width};
-        my $fixedbits = $rec->{fixedbits};
-        my $fixedbitmask = $rec->{fixedbitmask};
+        my $fixedbits = (@{ $rec->{fixedbits} })[0];
+        my $fixedbitmask = (@{  $rec->{fixedbitmask} })[0];
         my $constraint = $rec->{blocks}{"constraints"};
         my $memblock = $rec->{blocks}{"memory"};
 
@@ -120,7 +120,7 @@ sub gen_one_insn($$)
         $insn |= $fixedbits;
 
         for my $tuple (@{ $rec->{fields} }) {
-            my ($var, $pos, $mask) = @$tuple;
+            my ($var, $pos, $mask, $wordpos) = @$tuple;
             my $val = ($insn >> $pos) & $mask;
             # Check constraints here:
             # not allowed to use or modify sp (A7) or fp (A6)

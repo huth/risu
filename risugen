@@ -160,10 +160,11 @@ sub parse_config_file($)
             exit(1);
         }
 
-        my $fixedbits = 0;
-        my $fixedbitmask = 0;
+        my @fixedbits = (0, 0, 0, 0);
+        my @fixedbitmask = (0, 0, 0, 0);
         my $bitpos = 32;
-        my $insnwidth = 32;
+        my $wordpos = 0;
+        my $insnwidth = 0;
         my $seenblock = 0;
 
         while (@bits) {
@@ -217,36 +218,49 @@ sub parse_config_file($)
 
             my $bitmask = oct("0b". '1' x $bitlen);
             $bitpos -= $bitlen;
+            $insnwidth += $bitlen;
             if ($bitpos < 0) {
                 print STDERR "$file:$.: ($insn $enc) too many bits specified\n";
                 exit(1);
             }
 
             if (defined $bitval) {
-                $fixedbits |= ($bitval << $bitpos);
-                $fixedbitmask |= ($bitmask << $bitpos);
+                $fixedbits[$wordpos] |= ($bitval << $bitpos);
+                $fixedbitmask[$wordpos] |= ($bitmask << $bitpos);
             } else {
-                push @fields, [ $var, $bitpos, $bitmask ];
+                push @fields, [ $var, $bitpos, $bitmask, $wordpos ];
+            }
+
+            if ($bitpos == 0) {
+                if ((($fixedbits[$wordpos] & $fixedbitmask[$wordpos]) != $fixedbits[$wordpos])
+                    || (($fixedbits[$wordpos] & ~$fixedbitmask[$wordpos]) != 0)) {
+                    die "internal error: fixed bits not lined up with mask";
+                }
+
+                $wordpos += 1;
+                if (@bits) {
+                    $bitpos = 32;
+                }
             }
         }
         if ($bitpos == 16) {
             # assume this is a half-width thumb instruction
             # Note that we don't fiddle with the bitmasks or positions,
             # which means the generated insn will be in the high halfword!
-            $insnwidth = 16;
-        } elsif ($bitpos != 0) {
-            print STDERR "$file:$.: ($insn $enc) not enough bits specified\n";
+            if ((($fixedbits[$wordpos] & $fixedbitmask[$wordpos]) != $fixedbits[$wordpos])
+                || (($fixedbits[$wordpos] & ~$fixedbitmask[$wordpos]) != 0)) {
+                die "internal error: fixed bits not lined up with mask";
+            }
+        } elsif ($bitpos != 0 && $bitpos != 32) {
+            print STDERR "$file:$.: ($insn $enc) not enough bits specified ($bitpos)\n";
             exit(1);
-        }
-        if ((($fixedbits & $fixedbitmask) != $fixedbits)
-            || (($fixedbits & ~$fixedbitmask) != 0)) {
-            die "internal error: fixed bits not lined up with mask";
         }
         #  Stick the fixedbit info on the front of the array now we know it
         $insnrec->{name} = $insnname;
         $insnrec->{width} = $insnwidth;
-        $insnrec->{fixedbits} = $fixedbits;
-        $insnrec->{fixedbitmask} = $fixedbitmask;
+        $insnrec->{fixedbits} = [ @fixedbits ];
+        $insnrec->{fixedbitmask} = [ @fixedbitmask ];
+        $insnrec->{words} = $wordpos;
         $insnrec->{fields} = [ @fields ];
         if (@insn_groups) {
             $insnrec->{groups} = [ @insn_groups ];

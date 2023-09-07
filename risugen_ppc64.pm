@@ -300,8 +300,8 @@ sub gen_one_insn($$)
         my $insn = int(rand(0xffffffff));
         my $insnname = $rec->{name};
         my $insnwidth = $rec->{width};
-        my $fixedbits = $rec->{fixedbits};
-        my $fixedbitmask = $rec->{fixedbitmask};
+        my $fixedbits = (@{ $rec->{fixedbits} })[0];
+        my $fixedbitmask = (@{  $rec->{fixedbitmask} })[0];
         my $constraint = $rec->{blocks}{"constraints"};
         my $memblock = $rec->{blocks}{"memory"};
 

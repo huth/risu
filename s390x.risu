@@ -79,3 +79,14 @@ FIDBRA BFP 10110011 01011111 m3:4 m4:4 r1:4 r2:4
 # format:RRF-e LOAD FP INTEGER (extended BFP)
 FIXBRA BFP 10110011 01000111 m3:4 m4:4 r1:4 r2:4
 
+
+###### Vector instructions ######
+
+# format:VRI-d Vector Shift Left Double By Bit
+VSLD VXEH2 11100111 v1:4 v2:4 v3:4 0000 i4:8 0000 rxb:4 10000110
+
+# format:VRI-d Vector Shift Right Double By Bit
+VSRD VXEH2 11100111 v1:4 v2:4 v3:4 0000 i4:8 0000 rxb:4 10000111
+
+# format:VRR-a Vector FP Convert From Fixed
+VCFPS VXEH2 11100111 v1:4 v2:4 00000000 m5:4 m4:4 m3:4 rxb:4 11000011

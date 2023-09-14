@@ -1,0 +1,37 @@
+dist: focal
+language: c
+compiler:
+  - gcc
+addons:
+  apt:
+    packages:
+      - perl
+      - perl-modules
+      - liblist-compare-perl
+
+before_script:
+  - ./configure
+script:
+  - set -e
+  - make -j2
+  - ./risugen --numinsns 1000 ${ARCH}.risu ${ARCH}.bin
+
+matrix:
+  include:
+
+    - env:
+        - ARCH="aarch64"
+      arch: arm64
+
+    - env:
+        - ARCH="ppc64"
+      arch: ppc64le
+
+    - env:
+        - ARCH="s390x"
+      arch: s390x
+      after_script:
+      - ./risu --master ${ARCH}.bin > stdout.txt 2> stderr.txt &
+      - sleep 1
+      - ./risu --host localhost ${ARCH}.bin
+      - cat stdout.txt stderr.txt
